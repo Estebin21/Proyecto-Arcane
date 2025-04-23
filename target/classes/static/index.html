@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestión Arcane</title>
+  <style>
+    form { margin-bottom: 30px; }
+    label { display: block; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Gestión de Entidades Arcane</h1>
+
+  <!-- Personaje -->
+  <h2>Crear Personaje</h2>
+  <form id="form-personaje">
+    <label>Nombre: <input type="text" id="p-nombre" required></label>
+    <label>Origen: <input type="text" id="p-origen" required></label>
+    <label>Rol: <input type="text" id="p-rol" required></label>
+    <label>Alineación: <input type="text" id="p-alineacion" required></label>
+    <button type="submit">Crear Personaje</button>
+  </form>
+  <div id="out-personajes"></div>
+  <div id="out-organizaciones"></div>
+  <div id="out-tecnologias"></div>
+  <div id="out-afiliaciones"></div>
+  <div id="out-relaciones"></div>
+  <div id="out-usos"></div>
+
+
+  <!-- Organizacion -->
+  <h2>Crear Organización</h2>
+  <form id="form-organizacion">
+    <label>Nombre: <input type="text" id="o-nombre" required></label>
+    <label>Ciudad Base: <input type="text" id="o-ciudad" required></label>
+    <label>Tipo: <input type="text" id="o-tipo" required></label>
+    <button type="submit">Crear Organización</button>
+  </form>
+
+  <!-- Tecnología -->
+  <h2>Crear Tecnología</h2>
+  <form id="form-tecnologia">
+    <label>Nombre: <input type="text" id="t-nombre" required></label>
+    <label>Tipo: <input type="text" id="t-tipo" required></label>
+    <label>Descripción: <input type="text" id="t-desc" required></label>
+    <button type="submit">Crear Tecnología</button>
+  </form>
+
+  <!-- Afiliación -->
+  <h2>Crear Afiliación</h2>
+  <form id="form-afiliacion">
+    <label>ID Personaje: <input type="number" id="a-id-personaje" required></label>
+    <label>ID Organización: <input type="number" id="a-id-org" required></label>
+    <label>Rol: <input type="text" id="a-rol" required></label>
+    <label>Fecha Ingreso (YYYY-MM-DD): <input type="text" id="a-fecha" required></label>
+    <button type="submit">Crear Afiliación</button>
+  </form>
+
+  <!-- Relación -->
+  <h2>Crear Relación</h2>
+  <form id="form-relacion">
+    <label>ID Personaje A: <input type="number" id="r-id-a" required></label>
+    <label>ID Personaje B: <input type="number" id="r-id-b" required></label>
+    <label>Tipo de Relación: <input type="text" id="r-tipo" required></label>
+    <button type="submit">Crear Relación</button>
+  </form>
+
+  <!-- Uso de Tecnología -->
+  <h2>Crear Uso de Tecnología</h2>
+  <form id="form-uso">
+    <label>ID Personaje: <input type="number" id="u-id-personaje" required></label>
+    <label>ID Tecnología: <input type="number" id="u-id-tec" required></label>
+    <button type="submit">Crear Uso</button>
+  </form>
+
+  <script>
+  const mostrarRespuesta = (elementId, endpoint) => {
+    fetch(endpoint)
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById(elementId);
+        container.innerHTML = '<ul>' + data.map(e => '<li>' + JSON.stringify(e) + '</li>').join('') + '</ul>';
+      });
+  };
+
+  const postForm = (formId, url, dataBuilder, outputId) => {
+    document.getElementById(formId).addEventListener("submit", function(e) {
+      e.preventDefault();
+      const data = dataBuilder();
+      fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert("Creado exitosamente");
+        console.log("Respuesta:", data);
+        mostrarRespuesta(outputId, url);
+      });
+    });
+  };
+
+  postForm("form-personaje", "/personajes", () => ({
+    nombre: document.getElementById("p-nombre").value,
+    origen: document.getElementById("p-origen").value,
+    rol: document.getElementById("p-rol").value,
+    alineacion: document.getElementById("p-alineacion").value
+  }), "out-personajes");
+
+  postForm("form-organizacion", "/organizaciones", () => ({
+    nombre: document.getElementById("o-nombre").value,
+    ciudad_base: document.getElementById("o-ciudad").value,
+    tipo: document.getElementById("o-tipo").value
+  }), "out-organizaciones");
+
+  postForm("form-tecnologia", "/tecnologias", () => ({
+    nombre: document.getElementById("t-nombre").value,
+    tipo: document.getElementById("t-tipo").value,
+    descripcion: document.getElementById("t-desc").value
+  }), "out-tecnologias");
+
+  postForm("form-afiliacion", "/afiliaciones", () => ({
+    personaje: { id_personaje: parseInt(document.getElementById("a-id-personaje").value) },
+    organizacion: { id_organizacion: parseInt(document.getElementById("a-id-org").value) },
+    rol: document.getElementById("a-rol").value,
+    fecha_ingreso: document.getElementById("a-fecha").value
+  }), "out-afiliaciones");
+
+  postForm("form-relacion", "/relaciones", () => ({
+    personajeA: { id_personaje: parseInt(document.getElementById("r-id-a").value) },
+    personajeB: { id_personaje: parseInt(document.getElementById("r-id-b").value) },
+    tipo_relacion: document.getElementById("r-tipo").value
+  }), "out-relaciones");
+
+  postForm("form-uso", "/usos-tecnologia", () => ({
+    personaje: { id_personaje: parseInt(document.getElementById("u-id-personaje").value) },
+    tecnologia: { id_tecnologia: parseInt(document.getElementById("u-id-tec").value) }
+  }), "out-usos");
+
+  window.onload = () => {
+    mostrarRespuesta("out-personajes", "/personajes");
+    mostrarRespuesta("out-organizaciones", "/organizaciones");
+    mostrarRespuesta("out-tecnologias", "/tecnologias");
+    mostrarRespuesta("out-afiliaciones", "/afiliaciones");
+    mostrarRespuesta("out-relaciones", "/relaciones");
+    mostrarRespuesta("out-usos", "/usos-tecnologia");
+  };
+</script>
+</body>
+</html>
